@@ -1,0 +1,6 @@
+{
+  "name": "Automated Document Digitizer",
+  "description": "Automated document digitizer that extracts and categorizes text from scanned invoices using OCR and NLP.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
