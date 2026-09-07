@@ -90,17 +90,91 @@ export const UploadDropzone: React.FC<UploadDropzoneProps> = ({
   };
 
   const handleFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string;
-      setPreviewUrl(base64);
-      setSelectedFile({
-        base64,
-        mimeType: file.type || 'image/png',
-        fileName: file.name,
-      });
+    // If not an image (e.g. PDF), read directly
+    if (!file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        setPreviewUrl(base64);
+        setSelectedFile({
+          base64,
+          mimeType: file.type || 'application/pdf',
+          fileName: file.name,
+        });
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    // High-resolution image optimizer: resize max dimension to 1800px for instant upload and zero 504 timeouts
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const MAX_DIMENSION = 1800;
+      let width = img.width;
+      let height = img.height;
+
+      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+        if (width > height) {
+          height = Math.round((height * MAX_DIMENSION) / width);
+          width = MAX_DIMENSION;
+        } else {
+          width = Math.round((width * MAX_DIMENSION) / height);
+          height = MAX_DIMENSION;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, width, height);
+        const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+        const quality = mimeType === 'image/png' ? undefined : 0.92;
+        const base64 = canvas.toDataURL(mimeType, quality);
+        setPreviewUrl(base64);
+        setSelectedFile({
+          base64,
+          mimeType,
+          fileName: file.name,
+        });
+        return;
+      }
+
+      // Fallback if canvas is not available
+      const fallbackReader = new FileReader();
+      fallbackReader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        setPreviewUrl(base64);
+        setSelectedFile({
+          base64,
+          mimeType: file.type || 'image/jpeg',
+          fileName: file.name,
+        });
+      };
+      fallbackReader.readAsDataURL(file);
     };
-    reader.readAsDataURL(file);
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      const fallbackReader = new FileReader();
+      fallbackReader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        setPreviewUrl(base64);
+        setSelectedFile({
+          base64,
+          mimeType: file.type || 'image/jpeg',
+          fileName: file.name,
+        });
+      };
+      fallbackReader.readAsDataURL(file);
+    };
+
+    img.src = objectUrl;
   };
 
   const triggerProcess = () => {

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { DigitizedInvoice, InvoiceCategory } from '../types';
 import { exportToExcel, exportToCsv, exportToJson } from '../utils/exportUtils';
+import { formatMoney } from '../utils/numberFormat';
 
 interface InvoiceDatabaseDashboardProps {
   invoices: DigitizedInvoice[];
@@ -87,10 +88,10 @@ export const InvoiceDatabaseDashboard: React.FC<InvoiceDatabaseDashboardProps> =
 
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
           <div className="text-xs text-slate-500 font-medium">Total Expenditure</div>
-          <div className="text-2xl font-bold text-blue-600 mt-1">
-            ₹ {totalSpent.toLocaleString()}
+          <div className="text-2xl font-bold text-blue-600 mt-1 font-mono">
+            {formatMoney(totalSpent, '₹')}
           </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">Including ₹{totalTax.toLocaleString()} GST</div>
+          <div className="text-[11px] text-slate-400 mt-0.5">Including {formatMoney(totalTax, '₹')} GST</div>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
@@ -291,16 +292,16 @@ export const InvoiceDatabaseDashboard: React.FC<InvoiceDatabaseDashboardProps> =
                       {inv.items.length}
                     </td>
 
-                    <td className="p-3.5 text-right text-slate-600">
-                      {inv.currency || '₹'} {inv.subtotal.toLocaleString()}
+                    <td className="p-3.5 text-right text-slate-600 font-mono text-xs">
+                      {formatMoney(inv.subtotal, inv.currency || '₹')}
                     </td>
 
-                    <td className="p-3.5 text-right text-slate-600">
-                      {inv.currency || '₹'} {inv.taxGst.toLocaleString()}
+                    <td className="p-3.5 text-right text-slate-600 font-mono text-xs">
+                      {formatMoney(inv.taxGst, inv.currency || '₹')}
                     </td>
 
-                    <td className="p-3.5 text-right font-bold text-slate-900 whitespace-nowrap">
-                      {inv.currency || '₹'} {inv.totalAmount.toLocaleString()}
+                    <td className="p-3.5 text-right font-bold text-slate-900 whitespace-nowrap font-mono text-xs">
+                      {formatMoney(inv.totalAmount, inv.currency || '₹')}
                     </td>
 
                     <td className="p-3.5 text-center">

@@ -1,0 +1,23 @@
+# Version control
+.git
+.gitignore
+
+# Dependencies & build outputs
+node_modules
+dist
+build
+coverage
+
+# Environment & local configurations
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs and runtime artifacts
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db

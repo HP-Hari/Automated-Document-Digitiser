@@ -26,6 +26,7 @@ import {
 import { DigitizedInvoice } from '../types';
 import { exportSingleInvoiceToExcel, exportToJson } from '../utils/exportUtils';
 import { processImageOnCanvas } from '../utils/imagePreprocess';
+import { formatMoney, formatQuantity } from '../utils/numberFormat';
 
 interface InvoiceDetailViewerProps {
   invoice: DigitizedInvoice;
@@ -483,8 +484,8 @@ export const InvoiceDetailViewer: React.FC<InvoiceDetailViewerProps> = ({
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                   <div className="bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-200/80 dark:border-slate-700">
                     <div className="text-[11px] text-slate-500 dark:text-slate-400">Subtotal</div>
-                    <div className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">
-                      {invoice.currency} {invoice.subtotal.toLocaleString()}
+                    <div className="text-sm font-bold text-slate-900 dark:text-white mt-0.5 font-mono">
+                      {formatMoney(invoice.subtotal, invoice.currency || '₹')}
                     </div>
                   </div>
 
@@ -492,22 +493,22 @@ export const InvoiceDetailViewer: React.FC<InvoiceDetailViewerProps> = ({
                     <div className="text-[11px] text-slate-500 dark:text-slate-400">
                       GST ({invoice.taxRatePercent || 18}%)
                     </div>
-                    <div className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">
-                      {invoice.currency} {invoice.taxGst.toLocaleString()}
+                    <div className="text-sm font-bold text-slate-900 dark:text-white mt-0.5 font-mono">
+                      {formatMoney(invoice.taxGst, invoice.currency || '₹')}
                     </div>
                   </div>
 
                   <div className="bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-200/80 dark:border-slate-700">
                     <div className="text-[11px] text-slate-500 dark:text-slate-400">Discount</div>
-                    <div className="text-sm font-bold text-slate-600 dark:text-slate-300 mt-0.5">
-                      {invoice.discount > 0 ? `-${invoice.currency} ${invoice.discount.toLocaleString()}` : '₹ 0'}
+                    <div className="text-sm font-bold text-slate-600 dark:text-slate-300 mt-0.5 font-mono">
+                      {invoice.discount > 0 ? `-${formatMoney(invoice.discount, invoice.currency || '₹')}` : `${invoice.currency || '₹'} 0.00`}
                     </div>
                   </div>
 
                   <div className="bg-blue-600 text-white p-2.5 rounded-lg shadow-sm">
                     <div className="text-[11px] text-blue-100 font-medium">Total Amount</div>
-                    <div className="text-sm font-black mt-0.5">
-                      {invoice.currency} {invoice.totalAmount.toLocaleString()}
+                    <div className="text-sm font-black mt-0.5 font-mono">
+                      {formatMoney(invoice.totalAmount, invoice.currency || '₹')}
                     </div>
                   </div>
                 </div>
@@ -608,12 +609,12 @@ export const InvoiceDetailViewer: React.FC<InvoiceDetailViewerProps> = ({
                         <td className="p-2.5 text-center font-mono text-slate-500 dark:text-slate-400 text-[11px]">
                           {item.hsnCode || '—'}
                         </td>
-                        <td className="p-2.5 text-center font-semibold text-slate-700 dark:text-slate-300">{item.quantity}</td>
-                        <td className="p-2.5 text-right text-slate-600 dark:text-slate-400">
-                          {invoice.currency} {item.unitPrice.toLocaleString()}
+                        <td className="p-2.5 text-center font-semibold text-slate-700 dark:text-slate-300 font-mono">{formatQuantity(item.quantity)}</td>
+                        <td className="p-2.5 text-right text-slate-600 dark:text-slate-400 font-mono">
+                          {formatMoney(item.unitPrice, invoice.currency || '₹')}
                         </td>
-                        <td className="p-2.5 text-right font-bold text-slate-900 dark:text-white">
-                          {invoice.currency} {item.totalPrice.toLocaleString()}
+                        <td className="p-2.5 text-right font-bold text-slate-900 dark:text-white font-mono">
+                          {formatMoney(item.totalPrice, invoice.currency || '₹')}
                         </td>
                       </tr>
                     ))}
@@ -623,8 +624,8 @@ export const InvoiceDetailViewer: React.FC<InvoiceDetailViewerProps> = ({
                       <td colSpan={4} className="p-2.5 text-right text-slate-500 dark:text-slate-400">
                         Total Line Items Sum:
                       </td>
-                      <td colSpan={2} className="p-2.5 text-right font-bold text-slate-900 dark:text-white">
-                        {invoice.currency} {itemsSum.toLocaleString()}
+                      <td colSpan={2} className="p-2.5 text-right font-bold text-slate-900 dark:text-white font-mono">
+                        {formatMoney(itemsSum, invoice.currency || '₹')}
                       </td>
                     </tr>
                   </tfoot>

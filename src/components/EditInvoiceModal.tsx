@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { DigitizedInvoice, InvoiceCategory, InvoiceItem } from '../types';
 import { Plus, Trash2, Check, X, Calculator, ShieldCheck } from 'lucide-react';
+import { formatMoney, parseDecimalSafe } from '../utils/numberFormat';
 
 interface EditInvoiceModalProps {
   invoice: DigitizedInvoice;
@@ -38,17 +39,17 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
 
     // Auto calculate line total if qty or unit price changed
     if (field === 'quantity' || field === 'unitPrice') {
-      const q = field === 'quantity' ? Number(value) : current.quantity;
-      const p = field === 'unitPrice' ? Number(value) : current.unitPrice;
+      const q = field === 'quantity' ? parseDecimalSafe(value) : current.quantity;
+      const p = field === 'unitPrice' ? parseDecimalSafe(value) : current.unitPrice;
       current.totalPrice = Math.round(q * p * 100) / 100;
     }
 
     updated[index] = current;
     setItems(updated);
 
-    // Auto update subtotal
-    const newSubtotal = updated.reduce((sum, item) => sum + (Number(item.totalPrice) || 0), 0);
-    const newTotal = newSubtotal + (Number(formData.taxGst) || 0) - (Number(formData.discount) || 0);
+    // Auto update subtotal preserving 2 decimals
+    const newSubtotal = Math.round(updated.reduce((sum, item) => sum + (Number(item.totalPrice) || 0), 0) * 100) / 100;
+    const newTotal = Math.round((newSubtotal + (Number(formData.taxGst) || 0) - (Number(formData.discount) || 0)) * 100) / 100;
 
     setFormData((prev) => ({
       ...prev,
@@ -62,19 +63,19 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
       id: `item-new-${Date.now()}`,
       description: 'New Item',
       quantity: 1,
-      unitPrice: 1000,
-      totalPrice: 1000,
+      unitPrice: 100,
+      totalPrice: 100,
     };
     const updated = [...items, newItem];
     setItems(updated);
 
-    const newSubtotal = updated.reduce((sum, item) => sum + item.totalPrice, 0);
-    const newTotal = newSubtotal + (Number(formData.taxGst) || 0) - (Number(formData.discount) || 0);
+    const newSubtotal = Math.round(updated.reduce((sum, item) => sum + item.totalPrice, 0) * 100) / 100;
+    const newTotal = Math.round((newSubtotal + (Number(formData.taxGst) || 0) - (Number(formData.discount) || 0)) * 100) / 100;
 
     setFormData((prev) => ({
       ...prev,
       subtotal: newSubtotal,
-      totalAmount: newTotal,
+      totalAmount: Math.max(0, newTotal),
     }));
   };
 
@@ -82,28 +83,28 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
     const updated = items.filter((_, i) => i !== index);
     setItems(updated);
 
-    const newSubtotal = updated.reduce((sum, item) => sum + item.totalPrice, 0);
-    const newTotal = newSubtotal + (Number(formData.taxGst) || 0) - (Number(formData.discount) || 0);
+    const newSubtotal = Math.round(updated.reduce((sum, item) => sum + item.totalPrice, 0) * 100) / 100;
+    const newTotal = Math.round((newSubtotal + (Number(formData.taxGst) || 0) - (Number(formData.discount) || 0)) * 100) / 100;
 
     setFormData((prev) => ({
       ...prev,
       subtotal: newSubtotal,
-      totalAmount: newTotal,
+      totalAmount: Math.max(0, newTotal),
     }));
   };
 
   const handleRecalculate = () => {
-    const sub = items.reduce((sum, item) => sum + (Number(item.totalPrice) || 0), 0);
+    const sub = Math.round(items.reduce((sum, item) => sum + (Number(item.totalPrice) || 0), 0) * 100) / 100;
     const taxRate = Number(formData.taxRatePercent) || 18;
     const tax = Math.round(((sub * taxRate) / 100) * 100) / 100;
     const disc = Number(formData.discount) || 0;
-    const tot = sub + tax - disc;
+    const tot = Math.round((sub + tax - disc) * 100) / 100;
 
     setFormData((prev) => ({
       ...prev,
       subtotal: sub,
       taxGst: tax,
-      totalAmount: tot,
+      totalAmount: Math.max(0, tot),
     }));
   };
 
@@ -268,20 +269,24 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
                   />
                   <input
                     type="number"
+                    step="0.01"
+                    min="0"
                     value={item.quantity}
-                    onChange={(e) => handleItemChange(idx, 'quantity', Number(e.target.value))}
-                    className="w-14 p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded text-center"
+                    onChange={(e) => handleItemChange(idx, 'quantity', e.target.value)}
+                    className="w-14 p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded text-center font-mono"
                     title="Quantity"
                   />
                   <input
                     type="number"
+                    step="0.01"
+                    min="0"
                     value={item.unitPrice}
-                    onChange={(e) => handleItemChange(idx, 'unitPrice', Number(e.target.value))}
-                    className="w-20 p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded text-right"
+                    onChange={(e) => handleItemChange(idx, 'unitPrice', e.target.value)}
+                    className="w-20 p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded text-right font-mono"
                     title="Unit Price"
                   />
-                  <span className="w-20 font-bold text-right text-slate-800 dark:text-slate-200">
-                    ₹ {item.totalPrice.toLocaleString()}
+                  <span className="w-24 font-bold text-right text-slate-800 dark:text-slate-200 font-mono">
+                    {formatMoney(item.totalPrice, formData.currency || '₹')}
                   </span>
                   <button
                     type="button"
@@ -301,9 +306,11 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
               <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-0.5">Subtotal (₹)</label>
               <input
                 type="number"
+                step="0.01"
+                min="0"
                 value={formData.subtotal}
-                onChange={(e) => setFormData({ ...formData, subtotal: Number(e.target.value) })}
-                className="w-full p-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded font-bold text-slate-800 dark:text-slate-100"
+                onChange={(e) => setFormData({ ...formData, subtotal: parseDecimalSafe(e.target.value) })}
+                className="w-full p-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded font-bold text-slate-800 dark:text-slate-100 font-mono"
               />
             </div>
 
@@ -311,9 +318,11 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
               <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-0.5">GST Tax (₹)</label>
               <input
                 type="number"
+                step="0.01"
+                min="0"
                 value={formData.taxGst}
-                onChange={(e) => setFormData({ ...formData, taxGst: Number(e.target.value) })}
-                className="w-full p-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded font-bold text-slate-800 dark:text-slate-100"
+                onChange={(e) => setFormData({ ...formData, taxGst: parseDecimalSafe(e.target.value) })}
+                className="w-full p-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded font-bold text-slate-800 dark:text-slate-100 font-mono"
               />
             </div>
 
@@ -321,9 +330,11 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
               <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-0.5">Discount (₹)</label>
               <input
                 type="number"
+                step="0.01"
+                min="0"
                 value={formData.discount}
-                onChange={(e) => setFormData({ ...formData, discount: Number(e.target.value) })}
-                className="w-full p-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded font-bold text-slate-800 dark:text-slate-100"
+                onChange={(e) => setFormData({ ...formData, discount: parseDecimalSafe(e.target.value) })}
+                className="w-full p-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded font-bold text-slate-800 dark:text-slate-100 font-mono"
               />
             </div>
 
@@ -331,9 +342,11 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
               <label className="text-[11px] font-semibold text-blue-900 dark:text-blue-300 block mb-0.5">Total Amount (₹)</label>
               <input
                 type="number"
+                step="0.01"
+                min="0"
                 value={formData.totalAmount}
-                onChange={(e) => setFormData({ ...formData, totalAmount: Number(e.target.value) })}
-                className="w-full p-1.5 bg-blue-600 text-white border border-blue-700 rounded font-black text-sm"
+                onChange={(e) => setFormData({ ...formData, totalAmount: parseDecimalSafe(e.target.value) })}
+                className="w-full p-1.5 bg-blue-600 text-white border border-blue-700 rounded font-black text-sm font-mono"
               />
             </div>
           </div>

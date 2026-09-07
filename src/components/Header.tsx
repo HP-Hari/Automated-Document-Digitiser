@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileSpreadsheet, ScanText, Sparkles, CheckCircle2, AlertTriangle, Database, Sun, Moon } from 'lucide-react';
+import { FileSpreadsheet, ScanText, Sparkles, CheckCircle2, AlertTriangle, Database, Sun, Moon, Wifi, WifiOff } from 'lucide-react';
 import { DigitizedInvoice } from '../types';
 
 interface HeaderProps {
@@ -41,13 +41,24 @@ export const Header: React.FC<HeaderProps> = ({
               <ScanText className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-lg font-bold tracking-tight text-white">
                   Automated Document Digitizer
                 </h1>
                 <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30">
                   OCR & NLP Engine
                 </span>
+                {hasGeminiKey ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-300 bg-emerald-950/70 border border-emerald-700/60 px-2 py-0.5 rounded-full" title="Online Multimodal Vision Active">
+                    <Wifi className="w-2.5 h-2.5 text-emerald-400 animate-pulse" />
+                    Online + Local
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-300 bg-amber-950/70 border border-amber-700/60 px-2 py-0.5 rounded-full" title="Local Tesseract OCR & NLP Active - Zero Cloud Required">
+                    <WifiOff className="w-2.5 h-2.5 text-amber-400" />
+                    Offline Mode Active
+                  </span>
+                )}
               </div>
               <p className="text-xs text-slate-400">
                 Extracts, validates & categorizes text from scanned invoices with AI

@@ -1,0 +1,21 @@
+# Automated Document Digitizer - Python Requirements
+# Install with: pip install -r requirements.txt
+
+# Modern Google GenAI SDK for Gemini Vision & Multimodal Extraction
+google-genai>=0.1.1
+
+# HTTP requests client (for querying the running digitizer server)
+requests>=2.31.0
+
+# Image handling & preprocessing
+pillow>=10.2.0
+
+# Environment variables loader
+python-dotenv>=1.0.1
+
+# High-performance structured data validation
+pydantic>=2.6.0
+
+# Optional: Offline local Tesseract OCR integration
+pytesseract>=0.3.10
+
